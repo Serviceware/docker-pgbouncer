@@ -5,13 +5,12 @@ This is a minimal PgBouncer image, based on Alpine Linux.
 
 Features:
 
-* Very small, quick to pull (just 15MB)
+* Very small, quick to pull (just around 18MB)
 * Configurable using environment variables
 * Uses standard Postgres port 5432, to work transparently for applications.
 * Includes PostgreSQL client tools such as ``psql``, ``pg_isready``
 * MD5 authentication by default.
 * `/etc/pgbouncer/pgbouncer.ini` and `/etc/pbbouncer/userlist.txt` are auto-created if they don't exist.
-
 
 Why using PgBouncer
 -------------------
@@ -20,20 +19,13 @@ PostgreSQL connections take up a lot of memory ([about 10MB per connection](http
 
 By placing PgBouncer in between the web application and the actual PostgreSQL database, the memory and start-up costs are reduced. The web application can keep persistent connections to PgBouncer, while PgBouncer only keeps a few connections to the actual PostgreSQL server. It can reuse the same connection for multiple clients.
 
-
 Available tags
 --------------
 
 Base images:
 
-- `latest` ([Dockerfile](https://github.com/edoburu/docker-pgbouncer/blob/master/Dockerfile)) - Default and latest version.
-- `1.17.0` ([Dockerfile](https://github.com/edoburu/docker-pgbouncer/blob/v1.17.x/Dockerfile)) - Latest version.
-- `1.15.0` ([Dockerfile](https://github.com/edoburu/docker-pgbouncer/blob/v1.15.x/Dockerfile)) - Latest version.
-- `1.14.0` ([Dockerfile](https://github.com/edoburu/docker-pgbouncer/blob/v1.14.x/Dockerfile)) - Latest version.
-- `1.12.0` ([Dockerfile](https://github.com/edoburu/docker-pgbouncer/blob/v1.12.x/Dockerfile)) - Latest version.
-
-Images are automatically rebuild on Alpine Linux updates.
-
+* latest
+* 1.17.0
 
 Usage
 -----
@@ -42,20 +34,19 @@ Usage
 docker run --rm \
     -e DATABASE_URL="postgres://user:pass@postgres-host/database" \
     -p 5432:5432 \
-    edoburu/pgbouncer
+    docker-registry.services.sabio.de/serviceware-ops/pgbouncer:latest
 ```
-
 
 Or using separate variables:
 
 ```sh
 docker run --rm \
-    -e DB_USER=user \
-    -e DB_PASSWORD=pass \
-    -e DB_HOST=postgres-host \
-    -e DB_NAME=database \
+    -e DATABASES_USER=user \
+    -e DATABASES_PASSWORD=pass \
+    -e DATABASES_HOST=postgres-host \
+    -e DATABASES_NAME=database \
     -p 5432:5432 \
-    edoburu/pgbouncer
+    docker-registry.services.sabio.de/serviceware-ops/pgbouncer:latest
 ```
 
 Connecting should work as expected:
@@ -72,25 +63,12 @@ Almost all settings found in the [pgbouncer.ini](https://pgbouncer.github.io/con
 ```sh
 docker run --rm \
     -e DATABASE_URL="postgres://user:pass@postgres-host/database" \
-    -e POOL_MODE=session \
-    -e SERVER_RESET_QUERY="DISCARD ALL" \
-    -e MAX_CLIENT_CONN=100 \
+    -e DATABASES_POOL_MODE=session \
+    -e PGBOUNCER_SERVER_RESET_QUERY="DISCARD ALL" \
+    -e PGBOUNCER_MAX_CLIENT_CONN=100 \
     -p 5432:5432
-    edoburu/pgbouncer
+    docker-registry.services.sabio.de/serviceware-ops/pgbouncer:latest
 ```
-
-
-Kubernetes integration
-----------------------
-
-For example in Kubernetes, see the [examples/kubernetes folder](https://github.com/edoburu/docker-pgbouncer/tree/master/examples/kubernetes).
-
-
-Docker Compose
---------------
-
-For example in Docker Compose, see the [examples/docker-compose folder](https://github.com/edoburu/docker-pgbouncer/tree/master/examples/docker-compose).
-
 
 PostgreSQL configuration
 ------------------------
@@ -102,7 +80,6 @@ Make sure PostgreSQL at least accepts connections from the machine where PgBounc
 host    all             all             10.0.0.0/8              md5
 ```
 
-
 Using a custom configuration
 ----------------------------
 
@@ -110,32 +87,29 @@ When the default `pgbouncer.ini` is not sufficient, or you'd like to let multipl
 
 ```sh
 docker run --rm \
-    -e DB_USER=user \
-    -e DB_PASSWORD=pass \
-    -e DB_HOST=postgres-host \
-    -e DB_NAME=database \
+    -e DATABASES_USER=user \
+    -e DATABASES_PASSWORD=pass \
+    -e DATABASES_HOST=postgres-host \
+    -e DATABASES_NAME=database \
     -v pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
     -p 5432:5432
-    edoburu/pgbouncer
+    docker-registry.services.sabio.de/serviceware-ops/pgbouncer:latest
 ```
-
 
 Or extend the `Dockerfile`:
 
 ```Dockerfile
-FROM edoburu/pgbouncer:1.11.0
+FROM docker-registry.services.sabio.de/serviceware-ops/pgbouncer:1.17.0
 COPY pgbouncer.ini userlist.txt /etc/pgbouncer/
 ```
 
-
-When the `pgbouncer.ini` file exists, the startup script will not override it. An extra entry will be written to `userlist.txt` when `DATABASE_URL` contains credentials, or `DB_USER` and `DB_PASSWORD` are defined.
+When the `pgbouncer.ini` file exists, the startup script will not override it. An extra entry will be written to `userlist.txt` when `DATABASE_URL` contains credentials, or `DATABASES_USER` and `DATABASES_PASSWORD` are defined.
 
 The `userlist.txt` file uses the following format:
 
 ```
 "username" "plaintext-password"
 ```
-
 
 or:
 
@@ -150,7 +124,7 @@ examples/generate-userlist >> userlist.txt
 ```
 
 You can also connect with a single user to PgBouncer, and from there retrieve the actual database password
-by setting ``AUTH_USER``. See the example from: <https://www.cybertec-postgresql.com/en/pgbouncer-authentication-made-easy/>
+by setting ``PGBOUNCER_AUTH_USER``. See the example from: <https://www.cybertec-postgresql.com/en/pgbouncer-authentication-made-easy/>
 
 Connecting to the admin console
 -------------------------------
