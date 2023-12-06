@@ -26,6 +26,7 @@ Base images:
 
 * latest
 * 1.17.0
+* 1.21.0
 
 Usage
 -----

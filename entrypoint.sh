@@ -157,4 +157,13 @@ cat ${PG_CONFIG_DIR}/pgbouncer.ini
 echo "Starting $*..."
 fi
 
+# Start the inotify loop for pgbouncer to reload if the cert changes
+while true; do
+  inotifywait -e modify ${PGBOUNCER_CLIENT_TLS_KEY_FILE} ${PGBOUNCER_CLIENT_TLS_CERT_FILE} ${PGBOUNCER_CLIENT_TLS_CA_FILE} || {
+    echo "inotifywait failed with exit code $?"
+    exit 1
+  }
+  pkill -HUP pgbouncer
+done &
+
 exec "$@"
