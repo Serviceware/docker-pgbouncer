@@ -1,5 +1,5 @@
-FROM alpine:3.18.3
-ARG VERSION=1.21.0
+FROM alpine:3.23.4
+ARG VERSION=1.25.2
 
 # Inspiration from https://github.com/gmr/alpine-pgbouncer/blob/master/Dockerfile
 # hadolint ignore=DL3003,DL3018
@@ -7,13 +7,13 @@ RUN \
   # security
   apk add -U --no-cache --upgrade busybox && \
   # Download
-  apk add -U --no-cache autoconf autoconf-doc automake udns udns-dev curl gcc libc-dev libevent libevent-dev libtool make openssl-dev pkgconfig postgresql-client inotify-tools && \
+  apk add -U --no-cache autoconf autoconf-doc automake c-ares c-ares-dev curl gcc libc-dev libevent libevent-dev libtool make openssl-dev pkgconfig postgresql-client inotify-tools && \
   curl -o  /tmp/pgbouncer-$VERSION.tar.gz -L https://pgbouncer.github.io/downloads/files/$VERSION/pgbouncer-$VERSION.tar.gz && \
   cd /tmp && \
   # Unpack, compile
   tar xvfz /tmp/pgbouncer-$VERSION.tar.gz && \
   cd pgbouncer-$VERSION && \
-  ./configure --prefix=/usr --with-udns && \
+  ./configure --prefix=/usr --with-cares && \
   make && \
   # Manual install
   cp pgbouncer /usr/bin && \
@@ -26,7 +26,7 @@ RUN \
   # Cleanup
   cd /tmp && \
   rm -rf /tmp/pgbouncer*  && \
-  apk del --purge autoconf autoconf-doc automake udns-dev curl gcc libc-dev libevent-dev libtool make openssl-dev pkgconfig
+  apk del --purge autoconf autoconf-doc automake c-ares-dev curl gcc libc-dev libevent-dev libtool make openssl-dev pkgconfig
 
 COPY entrypoint.sh /entrypoint.sh
 USER postgres
